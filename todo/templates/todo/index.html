@@ -1,0 +1,99 @@
+{% load widget_tweaks %}
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>To-Do Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+          font-family: Arial;
+          background: #f0f0f0;
+          padding: 20px;
+          color: #222;  /* ✅ default text color */
+        }
+      
+        .task {
+          background: white;
+          padding: 15px;
+          margin: 10px 0;
+          border-left: 8px solid #FFD700; /* You can still keep this for visual priority */
+          color: #000;  /* ✅ make sure text is black */
+        }
+      
+        .task h3 {
+          margin: 0;
+          font-size: 1.2em;
+        }
+      
+        .reminder {
+          color: red; /* ⚠️ stands out for reminders */
+          font-weight: bold;
+        }
+      
+        a {
+          color: #007bff; /* Bootstrap-style blue links */
+          text-decoration: none;
+        }
+      
+        a:hover {
+          text-decoration: underline;
+        }
+
+        
+      </style>
+      
+</head>
+<body class="bg-light">
+<div class="container mt-4">
+    <h1 class="mb-4">To-Do List</h1>
+    {% for message in messages %}
+        <div class="alert alert-info">{{ message }}</div>
+    {% endfor %}
+    <a href="{% url 'add_task' %}" class="btn btn-primary mb-3">+ Add Task</a>
+    {% for task in tasks %}
+        <div class="task-card" style="background-color: {{ task.color }};">
+            <h4>{{ task.title }} {% if task.completed %}<span class="badge bg-success">Done</span>{% endif %}</h4>
+            <p>{{ task.description }}</p>
+            <p><strong>Priority:</strong> {{ task.priority|capfirst }} | <strong>Due:</strong> {{ task.due_date }}</p>
+            <p><strong>Time left:</strong>
+                <span class="countdown" data-due="{{ task.due_date|date:'Y-m-d\\TH:i:s' }}"></span>
+            </p>
+            <a href="{% url 'edit_task' task.id %}" class="btn btn-sm btn-warning">Edit</a>
+            <a href="{% url 'delete_task' task.id %}" class="btn btn-sm btn-danger">Delete</a>
+            {% if not task.completed %}
+                <a href="{% url 'complete_task' task.id %}" class="btn btn-sm btn-success">Mark Complete</a>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p>No tasks added yet.</p>
+    {% endfor %}
+</div>
+
+<script>
+    function updateCountdowns() {
+        const countdowns = document.querySelectorAll('.countdown');
+        countdowns.forEach(el => {
+            const dueTime = new Date(el.dataset.due);
+            const now = new Date();
+            const diff = dueTime - now;
+    
+            if (diff <= 0) {
+                el.innerHTML = '<span class="text-danger">Overdue</span>';
+                return;
+            }
+    
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+            el.textContent = `${hours}h ${minutes}m ${seconds}s`;
+        });
+    }
+    
+    // Initial update and refresh every second
+    updateCountdowns();
+    setInterval(updateCountdowns, 1000);
+    </script>
+</body>
+</html>
